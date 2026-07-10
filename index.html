@@ -321,7 +321,7 @@ async function handlePdfFile(file, password){
       const content = await page.getTextContent();
       texto += content.items.map(function(it){return it.str;}).join(' ') + '\n';
     }
-    extraerDatosPDF(texto);
+    extraerDatosPDF(texto, file.name);
     cerrarPwModal();
   }catch(err){
     if(err.name === 'PasswordException'){
@@ -341,32 +341,58 @@ function reintentarConPassword(){
   handlePdfFile(pdfPendingFile, pw);
 }
 
-function extraerDatosPDF(texto){
+function esPlacaValida(tok){
+  tok = tok.toUpperCase();
+  if(!/^[A-Z0-9]{6}$/.test(tok) && !/^[A-Z]{3}-\d{3,4}$/.test(tok)) return false;
+  const tieneLetra = /[A-Z]/.test(tok);
+  const tieneNumero = /[0-9]/.test(tok);
+  if(!tieneLetra || !tieneNumero) return false;
+  // Evitar confundir con fragmentos de VIN, RUC o fechas ya capturados
+  return true;
+}
+
+function extraerDatosPDF(texto, nombreArchivo){
   let cert='', placa='', aseg='';
+  const textoLimpio = texto.replace(/\s+/g,' ');
 
   if(/MAPFRE/i.test(texto)){
     aseg='MAPFRE';
-    const m = texto.match(/(\d{13})\s*-\s*\d/);
+    const m = textoLimpio.match(/(\d{13})\s*-\s*\d/);
     if(m) cert = m[1];
   } else if(/RIMAC/i.test(texto)){
     aseg='RIMAC';
-    const m = texto.match(/0{4}11(\d{8})0{12}1/);
+    const m = textoLimpio.match(/0{4}11(\d{8})0{12}1/);
     if(m) cert = m[1];
   } else if(/LA POSITIVA|POSITIVA SEGUROS/i.test(texto)){
     aseg='POSITIVA';
-    const m = texto.match(/(\d{9})\s*-\s*\d/);
+    const m = textoLimpio.match(/(\d{9})\s*-\s*\d/);
     if(m) cert = m[1];
   } else if(/INTERSEGURO/i.test(texto)){
     aseg='INTERSEGURO';
-    const m = texto.match(/\b(59\d{7})\b/);
+    const m = textoLimpio.match(/\b(59\d{7})\b/);
     if(m) cert = m[1];
   }
 
-  const placaMatch = texto.match(/Placa\s*[:\-]?\s*([A-Z0-9]{5,7})/i);
-  if(placaMatch) placa = placaMatch[1].toUpperCase();
-  else {
-    const generico = texto.match(/\b([A-Z]{3}-?\d{3}|[A-Z0-9]{6})\b/);
-    if(generico) placa = generico[1].toUpperCase();
+  // Respaldo: si es Interseguro (o no se detectó texto) y no se pudo leer el certificado,
+  // usar el número que aparece en el nombre del archivo
+  if(!cert && nombreArchivo){
+    const nombreDigits = nombreArchivo.match(/(\d{6,9})/);
+    if(nombreDigits){
+      cert = nombreDigits[1];
+      if(!aseg && /^59\d{6,7}$/.test(cert)) aseg='INTERSEGURO';
+      else if(!aseg) aseg='INTERSEGURO';
+    }
+  }
+
+  // Buscar placa: intenta primero cerca de la etiqueta "Placa", validando que sea alfanumérica real
+  const cercaPlaca = textoLimpio.match(/Placa\s*[:\-]?\s*([A-Z0-9-]{5,8})/i);
+  if(cercaPlaca && esPlacaValida(cercaPlaca[1])){
+    placa = cercaPlaca[1].toUpperCase();
+  } else {
+    // Fallback: buscar cualquier token de 6 caracteres con mezcla de letras y números
+    const tokens = textoLimpio.match(/\b[A-Z0-9]{6}\b|\b[A-Z]{3}-\d{3,4}\b/g) || [];
+    const candidato = tokens.find(esPlacaValida);
+    if(candidato) placa = candidato.toUpperCase();
   }
 
   if(cert){
