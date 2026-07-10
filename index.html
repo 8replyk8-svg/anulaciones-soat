@@ -232,6 +232,7 @@ small{font-size:11px;color:#999}
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyzNUwcg0DJTZEGUi_4YeP9R9KXHGOZ8e7IxiM_XhsdvPQWSxbdQwNl952VzCUqy2Y/exec';
+const CLAVE_API = 'replyk02';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 let registros = JSON.parse(localStorage.getItem('anulaciones_soat_final')||'[]');
@@ -446,7 +447,7 @@ async function guardar(){
   const cert=getCert(),placa=document.getElementById('f-placa').value.trim();
   if(!cert||!placa){showAlert('alert-err');return;}
   const emisorObj=getEmisor();
-  const reg={id:Date.now(),fecha:document.getElementById('f-fecha').value,cert:cert,placa:placa,aseg:getAseg(),emisor:emisorObj.nombre,punto:emisorObj.punto,estado:document.getElementById('f-estado').value,motivo:document.getElementById('f-motivo').value.trim()};
+  const reg={id:Date.now(),clave:CLAVE_API,fecha:document.getElementById('f-fecha').value,cert:cert,placa:placa,aseg:getAseg(),emisor:emisorObj.nombre,punto:emisorObj.punto,estado:document.getElementById('f-estado').value,motivo:document.getElementById('f-motivo').value.trim()};
 
   const btn=document.getElementById('btn-guardar');
   btn.disabled=true; btn.textContent='Guardando...';
