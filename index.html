@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Anulaciones SOAT</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+.header{background:#1a1a1a;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:17px;font-weight:700}
+.header p{font-size:12px;opacity:.6;margin-top:2px}
+.status-pill{font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid #4CAF50;color:#81C784}
+.container{max-width:960px;margin:0 auto;padding:20px 16px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:10px;padding:6px;border:1px solid #e0e0e0;flex-wrap:wrap}
+.tab{flex:1;padding:9px;font-size:13px;cursor:pointer;border:none;border-radius:7px;background:transparent;color:#666;font-weight:600;transition:all .15s;min-width:110px}
+.tab.active{background:#1a1a1a;color:#fff}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:20px;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:11px;color:#666;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+input,select,textarea{font-size:13px;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;color:#1a1a1a;width:100%;outline:none;transition:border .15s;font-family:Arial,sans-serif}
+input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
+textarea{resize:vertical;min-height:65px}
+.detected{font-size:12px;padding:8px 12px;border-radius:8px;margin-top:5px;display:none;font-weight:600}
+.detected.show{display:block}
+.manual-wrap{display:none;margin-top:6px}
+.manual-wrap.show{display:block}
+.otro-wrap{display:none;margin-top:6px}
+.otro-wrap.show{display:block}
+.btn-save{background:#1a1a1a;color:#fff;border:none;padding:12px 20px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:16px}
+.btn-save:hover{opacity:.85}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.btn-sec{background:#fff;border:1.5px solid #e0e0e0;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;color:#1a1a1a;font-weight:600}
+.btn-sec:hover{background:#f5f5f5}
+.alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;font-weight:600}
+.alert.show{display:block}
+.alert-ok{background:#E8F5E9;color:#2E7D32;border:1px solid #C8E6C9}
+.alert-err{background:#FFEBEE;color:#C62828;border:1px solid #FFCDD2}
+.alert-warn{background:#FFF8E1;color:#F57F17;border:1px solid #FFE082}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.metric{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;text-align:center}
+.metric-val{font-size:28px;font-weight:700}
+.metric-label{font-size:11px;color:#888;margin-top:3px;font-weight:600}
+.m-pos{color:#E65100}.m-rim{color:#880E4F}.m-map{color:#0D47A1}.m-int{color:#1B5E20}
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filters select,.filters input{font-size:12px;padding:7px 10px}
+.export-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 12px;border-bottom:2px solid #f0f0f0;font-weight:700;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:9px 12px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.empty{text-align:center;color:#bbb;padding:3rem;font-size:13px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.b-positiva{background:#FFF3E0;color:#E65100}
+.b-rimac{background:#FCE4EC;color:#880E4F}
+.b-mapfre{background:#E3F2FD;color:#0D47A1}
+.b-interseguro{background:#E8F5E9;color:#1B5E20}
+.b-sindetectar{background:#F5F5F5;color:#999}
+.b-vendido{background:#E8F5E9;color:#2E7D32}
+.b-cobrado{background:#E3F2FD;color:#1565C0}
+.b-reportado{background:#FFF8E1;color:#F57F17}
+.ptag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:4px}
+.pt-reg{background:#EDE7F6;color:#4527A0}
+.pt-otro{background:#FFF3E0;color:#E65100}
+.btn-del{background:none;border:none;cursor:pointer;color:#ddd;font-size:15px;padding:3px 7px}
+.btn-del:hover{color:#E53935}
+small{font-size:11px;color:#999}
+.drop-zone{border:2px dashed #ccc;border-radius:12px;padding:24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:all .15s;background:#fafafa}
+.drop-zone.dragover{border-color:#1a1a1a;background:#f0f0f0}
+.drop-zone p{font-size:13px;color:#888;margin-top:6px}
+.drop-zone .icon{font-size:28px}
+.pw-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.pw-modal-overlay.show{display:flex}
+.pw-modal{background:#fff;border-radius:14px;padding:24px;max-width:380px;width:90%}
+.pw-modal h3{font-size:15px;margin-bottom:10px}
+.pw-modal p{font-size:12px;color:#666;margin-bottom:12px}
+.pw-modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.emisor-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;font-size:13px}
+.emisor-row button{background:none;border:none;color:#E53935;cursor:pointer;font-size:14px}
+.add-emisor-row{display:flex;gap:8px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>🛡️ Anulaciones SOAT</h1>
+    <p>Sistema de registro por aseguradora</p>
+  </div>
+  <span class="status-pill">☁️ Conectado a Drive</span>
+</div>
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('registro',this)">+ Nuevo registro</button>
+    <button class="tab" onclick="switchTab('historial',this)">≡ Historial</button>
+    <button class="tab" onclick="switchTab('resumen',this)">📊 Resumen</button>
+    <button class="tab" onclick="switchTab('config',this)">⚙️ Configuración</button>
+  </div>
+
+  <div id="panel-registro" class="panel active">
+    <div class="card">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('pdf-input').click()">
+        <div class="icon">📄</div>
+        <strong>Arrastra el PDF del SOAT aquí</strong>
+        <p>o haz click para seleccionarlo — se completan certificado, placa y aseguradora automáticamente</p>
+        <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="handlePdfFile(this.files[0])"/>
+      </div>
+
+      <div id="alert-ok" class="alert alert-ok">✓ Registro guardado en Google Sheets</div>
+      <div id="alert-err" class="alert alert-err">⚠ Ingresa el número de certificado y la placa</div>
+      <div id="alert-warn" class="alert alert-warn">⚠ No se pudo guardar en Drive — se guardó localmente</div>
+      <div id="alert-pdf" class="alert alert-ok">✓ Datos extraídos del PDF</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha"/>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="f-estado">
+            <option value="Vendido">Vendido</option>
+            <option value="Cobrado">Cobrado</option>
+            <option value="Reportado">Reportado</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>N° Certificado / Póliza</label>
+          <input type="text" id="f-cert" placeholder="Pega el número o sube el PDF" oninput="detectar(this.value)"/>
+          <div id="det-badge" class="detected"></div>
+          <div id="manual-wrap" class="manual-wrap">
+            <small>No se pudo detectar automáticamente. Selecciona la aseguradora:</small>
+            <select id="f-aseg-manual" style="margin-top:4px">
+              <option value="">— Selecciona aseguradora —</option>
+              <option value="POSITIVA">Positiva</option>
+              <option value="RIMAC">Rimac</option>
+              <option value="MAPFRE">Mapfre</option>
+              <option value="INTERSEGURO">Interseguro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Placa</label>
+          <input type="text" id="f-placa" placeholder="ABC-123" oninput="this.value=this.value.toUpperCase()"/>
+        </div>
+        <div class="form-group">
+          <label>Emisor</label>
+          <select id="f-emisor-sel" onchange="toggleOtro(this.value)"></select>
+          <div id="otro-wrap" class="otro-wrap">
+            <input type="text" id="f-emisor-otro" placeholder="Nombre del emisor"/>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Motivo</label>
+          <textarea id="f-motivo" placeholder="Descripción del motivo de anulación..."></textarea>
+        </div>
+      </div>
+      <button class="btn-save" id="btn-guardar" onclick="guardar()">💾 Guardar registro</button>
+    </div>
+  </div>
+
+  <div id="panel-historial" class="panel">
+    <div class="export-bar"><button class="btn-sec" onclick="exportCSV()">⬇ Exportar CSV</button></div>
+    <div class="filters">
+      <select id="fil-aseg" onchange="renderTabla()"><option value="">Todas las aseguradoras</option><option value="POSITIVA">Positiva</option><option value="RIMAC">Rimac</option><option value="MAPFRE">Mapfre</option><option value="INTERSEGURO">Interseguro</option></select>
+      <select id="fil-estado" onchange="renderTabla()"><option value="">Todos los estados</option><option value="Vendido">Vendido</option><option value="Cobrado">Cobrado</option><option value="Reportado">Reportado</option></select>
+      <select id="fil-punto" onchange="renderTabla()"><option value="">Todos los puntos</option><option value="Registro">Punto Registro</option><option value="Otro">Otro PV</option></select>
+      <input type="text" id="fil-buscar" placeholder="Buscar placa, certificado o emisor..." oninput="renderTabla()" style="width:220px"/>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table><thead><tr><th>#</th><th>Fecha</th><th>Certificado</th><th>Placa</th><th>Aseguradora</th><th>Emisor</th><th>Estado</th><th>Motivo</th><th></th></tr></thead><tbody id="tabla-body"></tbody></table>
+    </div>
+  </div>
+
+  <div id="panel-resumen" class="panel">
+    <div class="summary-grid">
+      <div class="metric"><div class="metric-val m-pos" id="c-pos">0</div><div class="metric-label">Positiva</div></div>
+      <div class="metric"><div class="metric-val m-rim" id="c-rim">0</div><div class="metric-label">Rimac</div></div>
+      <div class="metric"><div class="metric-val m-map" id="c-map">0</div><div class="metric-label">Mapfre</div></div>
+      <div class="metric"><div class="metric-val m-int" id="c-int">0</div><div class="metric-label">Interseguro</div></div>
+    </div>
+    <div class="card">
+      <p style="font-size:13px;font-weight:700;margin-bottom:12px">Por estado</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="metric"><div class="metric-val" id="c-vend">0</div><div class="metric-label">Vendido</div></div>
+        <div class="metric"><div class="metric-val" id="c-cobr">0</div><div class="metric-label">Cobrado</div></div>
+        <div class="metric"><div class="metric-val" id="c-repo">0</div><div class="metric-label">Reportado</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="metric"><div class="metric-val" id="c-preg">0</div><div class="metric-label">Punto Registro</div></div>
+      <div class="metric"><div class="metric-val" id="c-potro">0</div><div class="metric-label">Otro PV</div></div>
+    </div>
+    <div class="card" style="text-align:center">
+      <p style="font-size:12px;color:#888;margin-bottom:6px;font-weight:600">TOTAL REGISTROS</p>
+      <p style="font-size:48px;font-weight:700" id="c-total">0</p>
+    </div>
+  </div>
+
+  <div id="panel-config" class="panel">
+    <div class="card">
+      <p style="font-size:14px;font-weight:700;margin-bottom:4px">Emisores — Punto Registro</p>
+      <p style="font-size:12px;color:#888;margin-bottom:14px">Agrega o quita las personas que emiten desde tu punto</p>
+      <div id="emisores-list"></div>
+      <div class="add-emisor-row">
+        <input type="text" id="nuevo-emisor" placeholder="Nombre del nuevo emisor"/>
+        <button class="btn-sec" onclick="agregarEmisor()">+ Agregar</button>
+      </div>
+    </div>
+    <div class="card">
+      <p style="font-size:14px;font-weight:700;margin-bottom:4px">Borrar datos locales</p>
+      <p style="font-size:12px;color:#888;margin-bottom:12px">Esto borra solo la vista local del navegador, no afecta tu Google Sheets</p>
+      <button class="btn-sec" onclick="borrarLocal()">🗑 Borrar historial local</button>
+    </div>
+  </div>
+</div>
+
+<div class="pw-modal-overlay" id="pw-modal">
+  <div class="pw-modal">
+    <h3>🔒 PDF protegido</h3>
+    <p>Este certificado tiene contraseña. Ingrésala para leer los datos.</p>
+    <input type="text" id="pdf-password" placeholder="Contraseña del PDF"/>
+    <div class="pw-modal-btns">
+      <button class="btn-sec" onclick="cerrarPwModal()">Cancelar</button>
+      <button class="btn-save" style="width:auto;margin:0;padding:9px 16px" onclick="reintentarConPassword()">Abrir PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyzNUwcg0DJTZEGUi_4YeP9R9KXHGOZ8e7IxiM_XhsdvPQWSxbdQwNl952VzCUqy2Y/exec';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let registros = JSON.parse(localStorage.getItem('anulaciones_soat_final')||'[]');
+let emisores = JSON.parse(localStorage.getItem('anulaciones_emisores')||'["Rivaldo","Jackelin","Evely","Christian","Vanesa"]');
+let pdfPendingFile = null;
+
+function hoy(){return new Date().toISOString().split('T')[0];}
+document.getElementById('f-fecha').value = hoy();
+
+function renderEmisorSelect(){
+  const sel = document.getElementById('f-emisor-sel');
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    '<optgroup label="📍 Punto Registro">' + emisores.map(e=>'<option>'+e+'</option>').join('') + '</optgroup>' +
+    '<optgroup label="🔀 Otro punto de venta"><option value="__otro__">Otro...</option></optgroup>';
+}
+function renderEmisoresConfig(){
+  const list = document.getElementById('emisores-list');
+  list.innerHTML = emisores.map((e,i)=>'<div class="emisor-row"><span>'+e+'</span><button onclick="quitarEmisor('+i+')">🗑</button></div>').join('');
+}
+function agregarEmisor(){
+  const inp = document.getElementById('nuevo-emisor');
+  const val = inp.value.trim();
+  if(!val) return;
+  emisores.push(val);
+  localStorage.setItem('anulaciones_emisores', JSON.stringify(emisores));
+  inp.value='';
+  renderEmisoresConfig();
+  renderEmisorSelect();
+}
+function quitarEmisor(i){
+  if(!confirm('¿Quitar este emisor de la lista?')) return;
+  emisores.splice(i,1);
+  localStorage.setItem('anulaciones_emisores', JSON.stringify(emisores));
+  renderEmisoresConfig();
+  renderEmisorSelect();
+}
+function borrarLocal(){
+  if(!confirm('¿Borrar el historial guardado en este navegador? No afecta tu Google Sheets.')) return;
+  registros = [];
+  localStorage.setItem('anulaciones_soat_final', JSON.stringify(registros));
+  renderTabla(); renderResumen();
+}
+renderEmisorSelect();
+renderEmisoresConfig();
+
+function detectar(val){
+  val=val.trim().replace(/\s/g,'');
+  let aseg='',cert=val,color='',bg='';
+  if(/^14\d{7}$/.test(val)){aseg='POSITIVA';color='#E65100';bg='#FFF3E0';}
+  else if(/^59\d{7}$/.test(val)){aseg='INTERSEGURO';color='#1B5E20';bg='#E8F5E9';}
+  else if(/^3022\d{9}$/.test(val)){aseg='MAPFRE';color='#0D47A1';bg='#E3F2FD';}
+  else if(/^0{4}11\d{6}0{12}1$/.test(val)){aseg='RIMAC';color='#880E4F';bg='#FCE4EC';cert=val.substring(6,14);}
+  else if(/^\d{8}$/.test(val)&&!/^14/.test(val)&&!/^59/.test(val)){aseg='RIMAC';color='#880E4F';bg='#FCE4EC';}
+  const el=document.getElementById('det-badge');
+  const manualWrap=document.getElementById('manual-wrap');
+  if(aseg){
+    el.innerHTML='✓ <strong>'+aseg+'</strong> detectada'+(cert!==val?(' · Certificado: <strong>'+cert+'</strong>'):'');
+    el.style.cssText='background:'+bg+';color:'+color+';border:1px solid '+color+'44';
+    el.classList.add('show');el.dataset.aseg=aseg;el.dataset.cert=cert;
+    manualWrap.classList.remove('show');
+    document.getElementById('f-aseg-manual').value='';
+  } else {
+    el.classList.remove('show');el.dataset.aseg='';el.dataset.cert='';
+    if(val.length>=6){ manualWrap.classList.add('show'); } else { manualWrap.classList.remove('show'); }
+  }
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave', function(){dz.classList.remove('dragover');});
+dz.addEventListener('drop', function(e){
+  e.preventDefault();dz.classList.remove('dragover');
+  if(e.dataTransfer.files.length) handlePdfFile(e.dataTransfer.files[0]);
+});
+
+async function handlePdfFile(file, password){
+  if(!file) return;
+  pdfPendingFile = file;
+  try{
+    const buf = await file.arrayBuffer();
+    const opts = {data: buf};
+    if(password) opts.password = password;
+    const pdf = await pdfjsLib.getDocument(opts).promise;
+    let texto = '';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      texto += content.items.map(function(it){return it.str;}).join(' ') + '\n';
+    }
+    extraerDatosPDF(texto);
+    cerrarPwModal();
+  }catch(err){
+    if(err.name === 'PasswordException'){
+      document.getElementById('pw-modal').classList.add('show');
+    } else {
+      alert('No se pudo leer el PDF. Intenta con otro archivo o ingresa los datos manualmente.');
+    }
+  }
+}
+function cerrarPwModal(){
+  document.getElementById('pw-modal').classList.remove('show');
+  document.getElementById('pdf-password').value='';
+}
+function reintentarConPassword(){
+  const pw = document.getElementById('pdf-password').value.trim();
+  if(!pw) return;
+  handlePdfFile(pdfPendingFile, pw);
+}
+
+function extraerDatosPDF(texto){
+  let cert='', placa='', aseg='';
+
+  if(/MAPFRE/i.test(texto)){
+    aseg='MAPFRE';
+    const m = texto.match(/(\d{13})\s*-\s*\d/);
+    if(m) cert = m[1];
+  } else if(/RIMAC/i.test(texto)){
+    aseg='RIMAC';
+    const m = texto.match(/0{4}11(\d{8})0{12}1/);
+    if(m) cert = m[1];
+  } else if(/LA POSITIVA|POSITIVA SEGUROS/i.test(texto)){
+    aseg='POSITIVA';
+    const m = texto.match(/(\d{9})\s*-\s*\d/);
+    if(m) cert = m[1];
+  } else if(/INTERSEGURO/i.test(texto)){
+    aseg='INTERSEGURO';
+    const m = texto.match(/\b(59\d{7})\b/);
+    if(m) cert = m[1];
+  }
+
+  const placaMatch = texto.match(/Placa\s*[:\-]?\s*([A-Z0-9]{5,7})/i);
+  if(placaMatch) placa = placaMatch[1].toUpperCase();
+  else {
+    const generico = texto.match(/\b([A-Z]{3}-?\d{3}|[A-Z0-9]{6})\b/);
+    if(generico) placa = generico[1].toUpperCase();
+  }
+
+  if(cert){
+    document.getElementById('f-cert').value = cert;
+    detectar(cert);
+  }
+  if(placa) document.getElementById('f-placa').value = placa;
+
+  if(cert || placa){
+    document.getElementById('alert-pdf').classList.add('show');
+    setTimeout(function(){document.getElementById('alert-pdf').classList.remove('show');},3500);
+  } else {
+    alert('No se pudieron identificar los datos automáticamente. Complétalos manualmente.');
+  }
+}
+
+function getCert(){return document.getElementById('det-badge').dataset.cert||document.getElementById('f-cert').value.trim();}
+function getAseg(){
+  return document.getElementById('det-badge').dataset.aseg
+    || document.getElementById('f-aseg-manual').value
+    || 'SIN DETECTAR';
+}
+function getEmisor(){
+  const s=document.getElementById('f-emisor-sel').value;
+  if(s==='__otro__') return {nombre:document.getElementById('f-emisor-otro').value.trim()||'Otro',punto:'Otro'};
+  if(!s) return {nombre:'',punto:''};
+  return {nombre:s,punto:'Registro'};
+}
+function toggleOtro(v){
+  const w=document.getElementById('otro-wrap');
+  if(v==='__otro__'){w.classList.add('show');document.getElementById('f-emisor-otro').focus();}
+  else w.classList.remove('show');
+}
+
+async function enviarApi(reg){
+  try{
+    const r = await fetch(API_URL, {method:'POST',headers:{'Content-Type':'text/plain'},body: JSON.stringify(reg)});
+    const json = await r.json();
+    return json.status === 'ok';
+  }catch(e){ return false; }
+}
+
+function showAlert(id,ms){
+  ms = ms || 3000;
+  ['alert-ok','alert-err','alert-warn'].forEach(function(x){document.getElementById(x).classList.remove('show');});
+  document.getElementById(id).classList.add('show');
+  setTimeout(function(){document.getElementById(id).classList.remove('show');},ms);
+}
+
+async function guardar(){
+  const cert=getCert(),placa=document.getElementById('f-placa').value.trim();
+  if(!cert||!placa){showAlert('alert-err');return;}
+  const emisorObj=getEmisor();
+  const reg={id:Date.now(),fecha:document.getElementById('f-fecha').value,cert:cert,placa:placa,aseg:getAseg(),emisor:emisorObj.nombre,punto:emisorObj.punto,estado:document.getElementById('f-estado').value,motivo:document.getElementById('f-motivo').value.trim()};
+
+  const btn=document.getElementById('btn-guardar');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  registros.push(reg);
+  localStorage.setItem('anulaciones_soat_final',JSON.stringify(registros));
+
+  const ok = await enviarApi(reg);
+  showAlert(ok?'alert-ok':'alert-warn');
+
+  btn.disabled=false; btn.textContent='💾 Guardar registro';
+
+  ['f-cert','f-placa','f-emisor-otro','f-motivo'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f-emisor-sel').value='';
+  document.getElementById('otro-wrap').classList.remove('show');
+  document.getElementById('f-fecha').value=hoy();
+  document.getElementById('f-estado').value='Vendido';
+  document.getElementById('det-badge').classList.remove('show');
+  document.getElementById('det-badge').dataset.aseg='';
+  document.getElementById('det-badge').dataset.cert='';
+  document.getElementById('manual-wrap').classList.remove('show');
+  document.getElementById('f-aseg-manual').value='';
+}
+
+function switchTab(t,btn){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');document.getElementById('panel-'+t).classList.add('active');
+  if(t==='historial')renderTabla();
+  if(t==='resumen')renderResumen();
+  if(t==='config'){renderEmisoresConfig();}
+}
+
+function renderTabla(){
+  const fa=document.getElementById('fil-aseg').value,fe=document.getElementById('fil-estado').value,fp=document.getElementById('fil-punto').value,fb=document.getElementById('fil-buscar').value.toLowerCase();
+  let data=registros.filter(function(r){return (!fa||r.aseg===fa)&&(!fe||r.estado===fe)&&(!fp||r.punto===fp)&&(!fb||(r.cert+r.placa+(r.emisor||'')).toLowerCase().includes(fb));});
+  const tb=document.getElementById('tabla-body');
+  if(!data.length){tb.innerHTML='<tr><td colspan="9" class="empty">No hay registros aún</td></tr>';return;}
+  tb.innerHTML=data.slice().reverse().map(function(r,i){
+    const cls=r.aseg.toLowerCase().replace(/\s/g,'');
+    const ptag=r.punto==='Registro'?'<span class="ptag pt-reg">Registro</span>':(r.punto==='Otro'?'<span class="ptag pt-otro">Otro PV</span>':'');
+    return '<tr><td style="color:#bbb">'+(data.length-i)+'</td><td>'+r.fecha+'</td><td style="font-family:monospace;font-size:11px">'+r.cert+'</td><td><strong>'+r.placa+'</strong></td><td><span class="badge b-'+cls+'">'+r.aseg+'</span></td><td>'+(r.emisor||'—')+ptag+'</td><td><span class="badge b-'+r.estado.toLowerCase()+'">'+r.estado+'</span></td><td style="font-size:11px;color:#888;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(r.motivo||'')+'">'+(r.motivo||'—')+'</td><td><button class="btn-del" onclick="eliminar('+r.id+')">🗑</button></td></tr>';
+  }).join('');
+}
+
+function eliminar(id){
+  if(!confirm('¿Eliminar este registro de la vista local? (No se borra de Google Sheets)'))return;
+  registros=registros.filter(function(r){return r.id!==id;});
+  localStorage.setItem('anulaciones_soat_final',JSON.stringify(registros));
+  renderTabla();
+}
+
+function renderResumen(){
+  function c(a){return registros.filter(function(r){return r.aseg===a;}).length;}
+  document.getElementById('c-pos').textContent=c('POSITIVA');
+  document.getElementById('c-rim').textContent=c('RIMAC');
+  document.getElementById('c-map').textContent=c('MAPFRE');
+  document.getElementById('c-int').textContent=c('INTERSEGURO');
+  document.getElementById('c-vend').textContent=registros.filter(function(r){return r.estado==='Vendido';}).length;
+  document.getElementById('c-cobr').textContent=registros.filter(function(r){return r.estado==='Cobrado';}).length;
+  document.getElementById('c-repo').textContent=registros.filter(function(r){return r.estado==='Reportado';}).length;
+  document.getElementById('c-preg').textContent=registros.filter(function(r){return r.punto==='Registro';}).length;
+  document.getElementById('c-potro').textContent=registros.filter(function(r){return r.punto==='Otro';}).length;
+  document.getElementById('c-total').textContent=registros.length;
+}
+
+function exportCSV(){
+  if(!registros.length){alert('No hay registros');return;}
+  const h=['N°','Fecha','Certificado','Placa','Aseguradora','Emisor','Punto','Estado','Motivo'];
+  const rows=registros.map(function(r,i){return [i+1,r.fecha,r.cert,r.placa,r.aseg,r.emisor,r.punto,r.estado,r.motivo];});
+  const csv=[h].concat(rows).map(function(r){return r.map(function(c){return '"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='anulaciones_'+hoy()+'.csv';a.click();
+}
+</script>
+</body>
+</html>
