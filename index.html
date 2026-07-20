@@ -517,11 +517,19 @@ function extraerDatosPDF(texto, nombreArchivo){
     if(candidato) placa = candidato.toUpperCase();
   }
 
+  // Buscar fecha de emisión: aparece como "Fecha DD/MM/YYYY" junto a "Hora de emisión"
+  let fechaISO = '';
+  const fechaMatch = textoLimpio.match(/\bFecha\b\s*[:\-]?\s*(\d{2})\/(\d{2})\/(\d{4})/i);
+  if(fechaMatch){
+    fechaISO = fechaMatch[3]+'-'+fechaMatch[2]+'-'+fechaMatch[1];
+  }
+
   if(cert){
     document.getElementById('f-cert').value = cert;
     detectar(cert);
   }
   if(placa) document.getElementById('f-placa').value = placa;
+  if(fechaISO) document.getElementById('f-fecha').value = fechaISO;
 
   if(cert || placa){
     document.getElementById('alert-pdf').classList.add('show');
