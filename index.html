@@ -6,6 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%3Cdefs%3E%0A%3CclipPath%20id%3D%22left%22%3E%3Cpath%20d%3D%22M32%204%20A28%2028%200%200%200%2032%2060%20Z%22/%3E%3C/clipPath%3E%0A%3CclipPath%20id%3D%22right%22%3E%3Cpath%20d%3D%22M32%204%20A28%2028%200%200%201%2032%2060%20Z%22/%3E%3C/clipPath%3E%0A%3C/defs%3E%0A%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2228%22%20fill%3D%22%236C5CE7%22%20clip-path%3D%22url%28%23left%29%22/%3E%0A%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2228%22%20fill%3D%22%23E67E22%22%20clip-path%3D%22url%28%23right%29%22/%3E%0A%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2228%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.5%22/%3E%0A%3Cline%20x1%3D%2232%22%20y1%3D%224%22%20x2%3D%2232%22%20y2%3D%2260%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.5%22/%3E%0A%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%226%22%20fill%3D%22%23fff%22/%3E%0A%3C/svg%3E"/>
 <title>Registro Anulaciones de SOAT</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -159,6 +160,8 @@ small{font-size:11px;color:#A8A8B8}
 .emisor-row button{background:none;border:none;color:#E53935;cursor:pointer;font-size:14px;border-radius:6px;padding:4px 6px}
 .emisor-row button:hover{background:#FDEEEE}
 .add-emisor-row{display:flex;gap:8px;margin-top:12px}
+.skeleton-bar{height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 37%,rgba(255,255,255,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
 </style>
 </head>
 <body>
@@ -184,20 +187,20 @@ small{font-size:11px;color:#A8A8B8}
       <p>Sistema de registro por aseguradora</p>
     </div>
   </div>
-  <span class="status-pill">☁️ Conectado a Drive</span>
+  <span class="status-pill"><i data-lucide="cloud" style="width:14px;height:14px"></i> Conectado a Drive</span>
 </div>
 <div class="container">
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('registro',this)">+ Nuevo registro</button>
-    <button class="tab" onclick="switchTab('historial',this)">≡ Historial</button>
-    <button class="tab" onclick="switchTab('resumen',this)">📊 Resumen</button>
-    <button class="tab" onclick="switchTab('config',this)">⚙️ Configuración</button>
+    <button class="tab active" onclick="switchTab('registro',this)"><i data-lucide="plus" style="width:15px;height:15px"></i> Nuevo registro</button>
+    <button class="tab" onclick="switchTab('historial',this)"><i data-lucide="list" style="width:15px;height:15px"></i> Historial</button>
+    <button class="tab" onclick="switchTab('resumen',this)"><i data-lucide="bar-chart-3" style="width:15px;height:15px"></i> Resumen</button>
+    <button class="tab" onclick="switchTab('config',this)"><i data-lucide="settings" style="width:15px;height:15px"></i> Configuración</button>
   </div>
 
   <div id="panel-registro" class="panel active">
     <div class="card">
       <div class="drop-zone" id="drop-zone" onclick="document.getElementById('pdf-input').click()">
-        <div class="icon">📄</div>
+        <div class="icon"><i data-lucide="file-text" style="width:36px;height:36px;color:#A78BFA"></i></div>
         <strong>Arrastra el PDF del SOAT aquí</strong>
         <p>o haz click para seleccionarlo</p>
         <div class="drop-zone-features">
@@ -258,12 +261,12 @@ small{font-size:11px;color:#A8A8B8}
           <textarea id="f-motivo" maxlength="500" placeholder="Descripción del motivo de anulación..."></textarea>
         </div>
       </div>
-      <button class="btn-save" id="btn-guardar" onclick="guardar()">💾 Guardar registro</button>
+      <button class="btn-save" id="btn-guardar" onclick="guardar()"><i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px"></i>Guardar registro</button>
     </div>
   </div>
 
   <div id="panel-historial" class="panel">
-    <div class="export-bar"><button class="btn-sec" onclick="exportCSV()">⬇ Exportar CSV</button></div>
+    <div class="export-bar"><button class="btn-sec" onclick="exportCSV()"><i data-lucide="download" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"></i>Exportar CSV</button></div>
     <div class="filters">
       <select id="fil-aseg" onchange="renderTabla()"><option value="">Todas las aseguradoras</option><option value="POSITIVA">Positiva</option><option value="RIMAC">Rimac</option><option value="MAPFRE">Mapfre</option><option value="INTERSEGURO">Interseguro</option></select>
       <select id="fil-estado" onchange="renderTabla()"><option value="">Todos los estados</option><option value="Vendido">Vendido</option><option value="Cobrado">Cobrado</option><option value="Reportado">Reportado</option></select>
@@ -307,20 +310,20 @@ small{font-size:11px;color:#A8A8B8}
       <div id="emisores-list"></div>
       <div class="add-emisor-row">
         <input type="text" id="nuevo-emisor" placeholder="Nombre del nuevo emisor"/>
-        <button class="btn-sec" onclick="agregarEmisor()">+ Agregar</button>
+        <button class="btn-sec" onclick="agregarEmisor()"><i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"></i>Agregar</button>
       </div>
     </div>
     <div class="card">
       <p style="font-size:14px;font-weight:700;margin-bottom:4px">Borrar datos locales</p>
       <p style="font-size:12px;color:#888;margin-bottom:12px">Esto borra solo la vista local del navegador, no afecta tu Google Sheets</p>
-      <button class="btn-sec" onclick="borrarLocal()">🗑 Borrar historial local</button>
+      <button class="btn-sec" onclick="borrarLocal()"><i data-lucide="trash-2" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"></i>Borrar historial local</button>
     </div>
   </div>
 </div>
 
 <div class="pw-modal-overlay" id="pw-modal">
   <div class="pw-modal">
-    <h3>🔒 PDF protegido</h3>
+    <h3><i data-lucide="lock" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px"></i>PDF protegido</h3>
     <p>Este certificado tiene contraseña. Ingrésala para leer los datos.</p>
     <input type="text" id="pdf-password" placeholder="Contraseña del PDF"/>
     <div class="pw-modal-btns">
@@ -361,6 +364,29 @@ let emisores = JSON.parse(localStorage.getItem('anulaciones_emisores')||'["Rival
 let pdfPendingFile = null;
 
 function hoy(){return new Date().toISOString().split('T')[0];}
+
+function lanzarConfetti(origenEl){
+  const rect = origenEl.getBoundingClientRect();
+  const colores = ['#7C3AED','#9333EA','#F97316','#FB923C'];
+  for(let i=0;i<14;i++){
+    const p = document.createElement('div');
+    const color = colores[i % colores.length];
+    const angle = (Math.PI*2*i)/14;
+    const dist = 60 + Math.random()*40;
+    p.style.cssText = 'position:fixed;left:'+(rect.left+rect.width/2)+'px;top:'+(rect.top+rect.height/2)+'px;width:6px;height:6px;border-radius:50%;background:'+color+';pointer-events:none;z-index:200;box-shadow:0 0 6px '+color;
+    document.body.appendChild(p);
+    const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist - 30;
+    p.animate([
+      {transform:'translate(0,0) scale(1)', opacity:1},
+      {transform:'translate('+dx+'px,'+dy+'px) scale(0)', opacity:0}
+    ], {duration:700+Math.random()*300, easing:'cubic-bezier(.2,.8,.3,1)'});
+    setTimeout(function(){p.remove();}, 1100);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  if(window.lucide) lucide.createIcons();
+});
 document.getElementById('f-fecha').value = hoy();
 
 function renderEmisorSelect(){
@@ -517,14 +543,19 @@ function extraerDatosPDF(texto, nombreArchivo){
     if(candidato) placa = candidato.toUpperCase();
   }
 
-  // Buscar fecha de emisión: aparece como "Fecha DD/MM/YYYY" junto a "Hora de emisión"
+  // Buscar fecha de emisión: el patrón más confiable es "Uso ... Fecha DD/MM/YYYY"
+  // (el campo Fecha aparece pareado junto a Uso en el layout del certificado SOAT)
   let fechaISO = '';
-  const fechaMatch = textoLimpio.match(/\bFecha\b[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i);
-  if(fechaMatch){
-    fechaISO = fechaMatch[3]+'-'+fechaMatch[2]+'-'+fechaMatch[1];
-  } else {
-    const desdeMatch = textoLimpio.match(/\bDesde\b[^\d]{0,20}(\d{2})\/(\d{2})\/(\d{4})/i);
-    if(desdeMatch) fechaISO = desdeMatch[3]+'-'+desdeMatch[2]+'-'+desdeMatch[1];
+  const fechaUsoMatch = textoLimpio.match(/\bUso\b\s*Fecha\b[^\d]{0,30}(\d{2})\/(\d{2})\/(\d{4})/i);
+  const fechaGenericaMatch = textoLimpio.match(/\bFecha\b[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i);
+  const desdeMatch = textoLimpio.match(/\bDesde\b[^\d]{0,20}(\d{2})\/(\d{2})\/(\d{4})/i);
+
+  if(fechaUsoMatch){
+    fechaISO = fechaUsoMatch[3]+'-'+fechaUsoMatch[2]+'-'+fechaUsoMatch[1];
+  } else if(fechaGenericaMatch){
+    fechaISO = fechaGenericaMatch[3]+'-'+fechaGenericaMatch[2]+'-'+fechaGenericaMatch[1];
+  } else if(desdeMatch){
+    fechaISO = desdeMatch[3]+'-'+desdeMatch[2]+'-'+desdeMatch[1];
   }
 
   if(cert){
@@ -590,8 +621,10 @@ async function guardar(){
 
   const ok = await enviarApi(reg);
   showAlert(ok?'alert-ok':'alert-warn');
+  if(ok) lanzarConfetti(btn);
 
-  btn.disabled=false; btn.textContent='💾 Guardar registro';
+  btn.disabled=false; btn.innerHTML='<i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px"></i>Guardar registro';
+  if(window.lucide) lucide.createIcons();
 
   ['f-cert','f-placa','f-emisor-otro','f-motivo'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('f-emisor-sel').value='';
@@ -609,9 +642,24 @@ function switchTab(t,btn){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   btn.classList.add('active');document.getElementById('panel-'+t).classList.add('active');
-  if(t==='historial')renderTabla();
+  if(t==='historial'){
+    mostrarSkeletonTabla();
+    setTimeout(renderTabla, 320);
+  }
   if(t==='resumen')renderResumen();
   if(t==='config'){renderEmisoresConfig();}
+  if(window.lucide) lucide.createIcons();
+}
+
+function mostrarSkeletonTabla(){
+  const tb=document.getElementById('tabla-body');
+  let filas='';
+  for(let i=0;i<5;i++){
+    filas += '<tr>'+Array(9).fill(0).map(function(){
+      return '<td><div class="skeleton-bar"></div></td>';
+    }).join('')+'</tr>';
+  }
+  tb.innerHTML = filas;
 }
 
 function escapeHtml(str){
