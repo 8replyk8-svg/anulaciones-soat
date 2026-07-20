@@ -519,9 +519,12 @@ function extraerDatosPDF(texto, nombreArchivo){
 
   // Buscar fecha de emisión: aparece como "Fecha DD/MM/YYYY" junto a "Hora de emisión"
   let fechaISO = '';
-  const fechaMatch = textoLimpio.match(/\bFecha\b\s*[:\-]?\s*(\d{2})\/(\d{2})\/(\d{4})/i);
+  const fechaMatch = textoLimpio.match(/\bFecha\b[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i);
   if(fechaMatch){
     fechaISO = fechaMatch[3]+'-'+fechaMatch[2]+'-'+fechaMatch[1];
+  } else {
+    const desdeMatch = textoLimpio.match(/\bDesde\b[^\d]{0,20}(\d{2})\/(\d{2})\/(\d{4})/i);
+    if(desdeMatch) fechaISO = desdeMatch[3]+'-'+desdeMatch[2]+'-'+desdeMatch[1];
   }
 
   if(cert){
